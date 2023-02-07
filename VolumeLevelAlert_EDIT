@@ -1,0 +1,32 @@
+//@version=4
+study(title="Volume Level", overlay=false, resolution="", format=format.volume)
+length = input(30, minval=1)
+src = sma(volume,2)
+mult = input(2.5, minval=0.001, maxval=50, title="StdDev")
+basis = sma(src, length)
+dev = mult * stdev(src, length)
+upper = basis + dev
+lower = basis - dev
+offset = input(0, "Offset", type = input.integer, minval = -500, maxval = 500)
+
+
+//p1 = plot(upper, "Upper", color=color.teal, offset = offset)
+//p2 = plot(basis, "Basis", color=#872323, offset = offset)
+
+p0 = plot(0, color=na, display=display.none, editable=false)
+p1 = plot(basis , color=na, display=display.none, editable=false)
+p2 = plot(upper, color=na, display=display.none, editable=false)
+p3 = plot(upper*1.2, color=na, display=display.none, editable=false)
+//p3 = plot(zshow_backgrounds ? ts3 : na, color=na, display=display.none, editable=false)
+//p4 = plot(zshow_backgrounds ? ts4 : na, color=na, display=display.none, editable=false)
+
+fill(p0, p1, #a0d6dc, title='Low Volume Zone')
+fill(p1, p2, #ff7800, title='Normal Volume Zone')
+fill(p2, p3, #ff0000, title='High Volume Zone')
+
+color_vol = src > upper ? #ff0000 : src > basis ? #a0d6dc : #1f9cac
+
+
+plot(src,style=plot.style_columns,color=color_vol)
+
+alertcondition(src > upper , title = "Volume Breakout", message = "Detected Volume Breakout at Price : {{close}}")

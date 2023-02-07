@@ -1,0 +1,41 @@
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © io72signals
+
+//@version=4
+study("LWMA", shorttitle="LWMA", overlay=true, format=format.inherit)
+
+//{ LWMA Custom Weighted Function
+get_lwma(src, period, weight) =>
+    price = src
+    sub = (weight/period) - 1
+    float p = na
+    float d = na
+    float sum = 0
+    float divider = 0
+    for i = 0 to period-1
+        p := price[i] * ((weight-i)-sub)
+        d := (weight-i)-sub
+        sum := sum + p
+        divider := divider + d
+    sum / divider
+//}--LWMA Custom Weighted 
+
+/// Sample Usage
+lwma_source = input(close, title="LWMA Source:", type=input.source)
+lwma_period = input (11, title = "LWMA Lookback Period:", minval=1, step=1)
+lwma_weight = input (6, title = "LWMA Weight:", minval=1, step=1)
+colorChange = input(true, title="Directional color change?", type=input.bool)
+
+lwma = get_lwma(lwma_source, lwma_period, lwma_weight)
+
+lwmaRise = lwma[1] < lwma
+lwmaFall = lwma[1] > lwma
+lColor = colorChange ? lwmaRise ? color.green : color.red : color.blue
+
+plot(lwma, color=lColor, linewidth=2)
+
+// ALERTS
+if lwmaRise and not lwmaRise[1]
+    alert("LWMA is Rising", alert.freq_once_per_bar)
+if lwmaFall and not lwmaFall[1]
+    alert("LWMA is Falling", alert.freq_once_per_bar)

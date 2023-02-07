@@ -1,0 +1,35 @@
+//@version=4
+// This work is licensed under a Creative Commons Attribution-ShareAlike 4.0 International License https://creativecommons.org/licenses/by-sa/4.0/
+// © dman103
+// Sweet little indicator which measures volume pressure over a specific period of time.
+// The indicator sums up all green candles volume and red candles volumes over a specific period of bars (you set in settings) and plots their values.
+// Use this indicator to identify increasing volume with the green candles (close bigger than open) and increasing volume of the red candles (close is smaller than open).
+//
+// ======= Calculation ==========
+// For Green Column: Total Volume of green candles is higher than total red candles volume. 
+// For Red Column: Total Volume of red candles is higher than total green candles volume.
+//
+// ======= Volume Trend Meter Colors =======
+// Green: Increasing buying pressure. 
+// Red: Increasing selling pressure.
+
+// Like if you like and Follow me for upcoming indicators/strategies.
+
+study("Crypto Volume Basic", "CryptoVolumeBasic", overlay = false, format = format.volume)
+bars = input(1, title = "Previous Bars to Check")
+one_side = input(true, title = "Positive Histogram Only")
+min_show_diagram = input(1000000, title = "Minimal Volume to Show Histogram")
+
+float volume_up = 0
+float volume_down = 0
+
+for i = 0 to bars - 1
+    if (close[i] > open[i])
+        volume_up := volume_up + volume[i]
+    else
+        volume_down := volume_down + volume[i]
+
+total_up_down_vol = volume_up - volume_down
+plot(one_side ? abs(total_up_down_vol) : total_up_down_vol, color = total_up_down_vol < (0 - min_show_diagram) ? color.red : total_up_down_vol > min_show_diagram ? color.green : color.black, style = plot.style_columns)
+
+alertcondition(abs(total_up_down_vol) > min_show_diagram, title = "Notifikasi", message = "Volume sudah lebih dari {{volume}} ")

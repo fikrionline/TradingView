@@ -1,0 +1,34 @@
+//@version=4
+study(title="Multiple EMA", shorttitle="EMA", overlay=true, linktoseries=true)
+
+ema1 = input(title="EMA 1", type=input.integer, defval=3, minval=0)
+ema_1 = ema(high, ema1)
+plot(ema_1, "EMA 1", color.white)
+
+ema2 = input(title="EMA 2", type=input.integer, defval=3, minval=0)
+ema_2 = ema(low, ema2)
+plot(ema_2, "EMA 2", color.white)
+
+ema3 = input(title="EMA 3", type=input.integer, defval=6, minval=0)
+ema_3 = ema(high, ema3)
+plot(ema_3, "EMA 3", color.aqua)
+
+ema4 = input(title="EMA 4", type=input.integer, defval=6, minval=0)
+ema_4 = ema(low, ema4)
+plot(ema_4, "EMA 4", color.aqua)
+
+ema5 = input(title="EMA 5", type=input.integer, defval=30, minval=0)
+ema_5 = ema(close, ema5)
+plot(ema_5, "EMA 5", color.red)
+
+ema6 = input(title="EMA 6", type=input.integer, defval=60, minval=0)
+ema_6 = ema(close, ema6)
+plot(ema_6, "EMA 6", color.orange)
+
+ema7 = input(title="EMA 7", type=input.integer, defval=120, minval=0)
+ema_7 = ema(close, ema7)
+plot(ema_7, "EMA 7", color.yellow)
+
+ema8 = input(title="EMA 8", type=input.integer, defval=240, minval=0)
+ema_8 = ema(close, ema8)
+plot(ema_8, "EMA 8", color.green)

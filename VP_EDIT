@@ -1,0 +1,19 @@
+//@version=4
+study(title = 'VolumePressure', precision = 1, overlay = false, format = format.volume)
+
+one_side = input(false, title = "Positive Histogram Only")
+
+var COLOR_UP = color.green
+var COLOR_DOWN = color.red
+var COLOR_MIDDLE = color.black
+
+buyingVolume = round(volume * (close - low) / (high - low))
+sellingVolume = round(volume * (high - close) / (high - low))
+
+plot(buyingVolume > sellingVolume ? buyingVolume : na, style = plot.style_columns, color = COLOR_UP)
+plot(sellingVolume > buyingVolume ? sellingVolume : na, style = plot.style_columns, color = COLOR_DOWN)
+
+plot(buyingVolume > sellingVolume ? sellingVolume : na, style = plot.style_columns, color = COLOR_DOWN)
+plot(sellingVolume > buyingVolume ? buyingVolume : na, style = plot.style_columns, color = COLOR_UP)
+
+plot(sellingVolume == buyingVolume ? buyingVolume : na, style = plot.style_columns, color = COLOR_MIDDLE)

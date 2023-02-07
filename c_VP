@@ -1,0 +1,20 @@
+//@version=4
+study(title = 'CryptoVolumePressure', precision = 1, overlay = false, format = format.volume)
+
+min_show_diagram = input(300000, title = "Min Volume to Show Histogram")
+
+var COLOR_UP = color.green
+var COLOR_DOWN = color.red
+var COLOR_MIDDLE = color.black
+
+buyingVolume = round(volume * (close - low) / (high - low))
+sellingVolume = round(volume * (high - close) / (high - low))
+totalVolume = buyingVolume + sellingVolume
+
+plot(totalVolume < min_show_diagram ? na : buyingVolume > sellingVolume ? buyingVolume : na, style = plot.style_columns, color = COLOR_UP)
+plot(totalVolume < min_show_diagram ? na : sellingVolume > buyingVolume ? sellingVolume : na, style = plot.style_columns, color = COLOR_DOWN)
+
+plot(totalVolume < min_show_diagram ? na : buyingVolume > sellingVolume ? sellingVolume : na, style = plot.style_columns, color = COLOR_DOWN)
+plot(totalVolume < min_show_diagram ? na : sellingVolume > buyingVolume ? buyingVolume : na, style = plot.style_columns, color = COLOR_UP)
+
+plot(totalVolume < min_show_diagram ? na : sellingVolume == buyingVolume ? buyingVolume : na, style = plot.style_columns, color = COLOR_MIDDLE)

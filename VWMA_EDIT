@@ -1,0 +1,26 @@
+//@version=4
+study(title="Multiple VWMA", shorttitle="VWMA", overlay=true, linktoseries=true)
+
+vwma1 = input(title="VWMA 1", type=input.integer, defval=6, minval=0)
+vwma_1 = vwma(high, vwma1)
+plot(vwma_1, "VWMA 1", color.white)
+
+vwma2 = input(title="VWMA 2", type=input.integer, defval=6, minval=0)
+vwma_2 = vwma(low, vwma2)
+plot(vwma_2, "VWMA 2", color.white)
+
+vwma3 = input(title="VWMA 3", type=input.integer, defval=33, minval=0)
+vwma_3 = vwma(close, vwma3)
+plot(vwma_3, "VWMA 3", color.orange)
+
+vwma4 = input(title="VWMA 4", type=input.integer, defval=60, minval=0)
+vwma_4 = vwma(close, vwma4)
+plot(vwma_4, "VWMA 4", color.yellow)
+
+vwma5 = input(title="VWMA 5", type=input.integer, defval=120, minval=0)
+vwma_5 = vwma(close, vwma5)
+plot(vwma_5, "VWMA 5", color.green)
+
+vwma6 = input(title="VWMA 6", type=input.integer, defval=240, minval=0)
+vwma_6 = vwma(close, vwma6)
+plot(vwma_6, "VWMA 6", color.blue)

@@ -1,0 +1,53 @@
+//@version=5
+
+// Ryuryu's TradingView MA Order Indicator
+// (Production Mode 6973)
+// ---------------------------------------------
+// (c) Ryan Hayabusa 2023
+// GitGub: https://github.com/ryu878
+// Web: https://aadresearch.xyz
+// Discord: ryuryu#4087
+// Mail: ev4ar2xihu3xxcdbyy5djgpfe01@gmail.com
+// ---------------------------------------------
+
+indicator('MA Order v1 [AAD Research]', 'MA Order v1 [AAD Research]', overlay=true)
+
+// Settings
+ma_3_high_source = input(defval=high)
+ma_3_high_length = input.int(defval=3, minval=1)
+ma_3_low_source = input(defval=low)
+ma_3_low_length = input.int(defval=3, minval=1)
+ma_6_high_source = input(defval=high)
+ma_6_high_length = input.int(defval=6, minval=1)
+ma_6_low_source = input(defval=low)
+ma_6_low_length = input.int(defval=6, minval=1)
+ma_33_close_source = input(defval=close)
+ma_33_close_length = input.int(defval=30, minval=1)
+ma_60_close_source = input(defval=close)
+ma_60_close_length = input.int(defval=60, minval=1)
+ma_120_close_source = input(defval=close)
+ma_120_close_length = input.int(defval=120, minval=1)
+ma_240_close_source = input(defval=close)
+ma_240_close_length = input.int(defval=240, minval=1)
+
+
+// Declare MAs
+ma_3_low = ta.sma(ma_3_low_source, ma_3_low_length)
+ma_3_high = ta.sma(ma_3_high_source, ma_3_high_length)
+ma_6_low = ta.sma(ma_6_low_source, ma_6_low_length)
+ma_6_high = ta.sma(ma_6_high_source, ma_6_high_length)
+ma_33_close = ta.sma(ma_33_close_source, ma_33_close_length)
+ma_60_close = ta.sma(ma_60_close_source, ma_60_close_length)
+ma_120_close = ta.sma(ma_120_close_source, ma_120_close_length)
+ma_240_close = ta.sma(ma_240_close_source, ma_240_close_length)
+
+
+// Plot
+plot(series=ma_3_low, title='ma_3_low', color=color.new(#7a7a7a, 0), linewidth=1)
+plot(series=ma_3_high, title='ma_3_high', color=color.new(#7a7a7a, 0), linewidth=1)
+plot(series=ma_6_low, title='ma_6_low', color=color.new(#eff177, 0), linewidth=1)
+plot(series=ma_6_high, title='ma_6_high', color=color.new(#eff177, 0), linewidth=1)
+plot(series=ma_33_close, title='ma_33_close', color=color.new(#3e80fa, 0), linewidth=2)
+plot(series=ma_60_close, title='ma_60_close', color=color.new(#ff0000, 0), linewidth=2)
+plot(series=ma_120_close, title='ma_120_close', color=color.new(#ff9900, 0), linewidth=2)
+plot(series=ma_240_close, title='ma_240_close', color=color.new(#009933, 0), linewidth=2)

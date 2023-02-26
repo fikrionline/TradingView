@@ -1,0 +1,39 @@
+//@version=5
+indicator("DeltaVolume", format=format.volume, overlay = false, precision=2)
+
+about_indi_tooltip = "                        ❤️ Created by SiddWolf ❤️ \n\n✅ Delta Volume is Difference between Buying Volume and Selling Volume. This is calculated on the basis of Lower TimeFrame Candles.\n\n✅ For example: If you open 4 hours chart, this indicator checks volume of 1 minute chart and separates Buying-Selling volume and calculates Delta Volume.\n✅ This indicator also shows Smooth Delta Volume to find trends."
+about_indi = input.bool(defval=true, title="About Delta Volume: ", tooltip=about_indi_tooltip)
+
+
+tf_setting_tooltip = "➡️ TimeFrame in Minutes, based on which Delta Volume is calculated. Read indicator description for more detail.\n\n\n Change this Only if:\n ✅ Script gives Error: \"The study references too many candles in history\"\n OR\n ✅ You want data for more candles in History"
+sidd_time_res_for_delta = input.timeframe('1', "Lower TimeFrame: ", options=['1', '2', '3', '4', '5', '10', '15', '20', '30'], tooltip=tf_setting_tooltip)
+
+
+what_to_show_setting_tooltip = "✅ Only Delta Volume: This Shows Delta Volume as Columns\n✅ Only Smooth Delta Volume: This shows Smooth Out Delta Volume as Columns. This is good for finding Overall Trend. The Moving Average can be changed.\n✅ Both Delta Volume and Smooth Delta Volume: This shows both Delta Volume (as columns) and Smooth Delta Volume (as line), giving complete perspective"
+what_to_show = input.string(defval="Only Delta Volume", title="Show: ", options=["Only Delta Volume", "Only Smooth Delta Volume", "Both Delta Volume and Smooth Delta Volume"], tooltip=what_to_show_setting_tooltip)
+ma_length = input.int(defval=3, title="MA Length: ", minval=3, maxval=21, tooltip="Moving Average Length to Smooth Delta Volume")
+
+show_as_pcent_tooltip = "✅ Checking this shows Delta Volume as Percentage of Overall Candle's Volume."
+show_as_pcent = input.bool(defval=false, title="Show as Percentage", tooltip=show_as_pcent_tooltip)
+
+
+array<float> sidd_ltf_volume = request.security_lower_tf(syminfo.tickerid, sidd_time_res_for_delta, volume)
+array<float> sidd_ltf_close_minus_open = request.security_lower_tf(syminfo.tickerid, sidd_time_res_for_delta, math.sign(close-open))
+
+sidd_test_pos_volume = array.new_float()
+sidd_test_neg_volume = array.new_float()
+
+for i=0 to array.size(sidd_ltf_close_minus_open)-1
+    if array.size(sidd_ltf_close_minus_open)>i+1
+        if array.get(sidd_ltf_close_minus_open, i) < 0
+            array.push(sidd_test_neg_volume, nz(array.get(sidd_ltf_volume, i)))
+        else if array.get(sidd_ltf_close_minus_open, i) > 0
+            array.push(sidd_test_pos_volume, nz(array.get(sidd_ltf_volume, i)))
+
+sidd_plot = nz(array.sum(sidd_test_pos_volume))-nz(array.sum(sidd_test_neg_volume))
+
+sidd_plot := show_as_pcent ? ((sidd_plot/volume)*100) : sidd_plot
+
+plot(what_to_show!="Only Smooth Delta Volume" ? sidd_plot : na, title="Delta Volume", color=sidd_plot>0 ? color.green : color.red, style=plot.style_columns)
+plot(what_to_show!="Only Delta Volume" ? ta.wma(sidd_plot, ma_length) : na, title="Smooth Delta Volume", color=what_to_show=="Only Delta Volume" ? (sidd_plot>0 ? color.green : color.red) : what_to_show=="Only Smooth Delta Volume" ? (ta.wma(sidd_plot, ma_length)>0 ? color.green : color.red) : color.black, style=what_to_show=="Only Smooth Delta Volume" ?plot.style_columns : plot.style_line)
+

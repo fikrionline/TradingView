@@ -1,0 +1,98 @@
+//@version=5
+
+// Ryuryu's TradingView MA Order Indicator
+// (Production Mode 6973)
+// ---------------------------------------------
+// (c) Ryan Hayabusa 2023
+// GitGub: https://github.com/ryu878
+// Web: https://aadresearch.xyz
+// Discord: ryuryu#4087
+// Mail: ev4ar2xihu3xxcdbyy5djgpfe01@gmail.com
+// ---------------------------------------------
+
+strategy("Rasyid", process_orders_on_close=true, default_qty_type=strategy.cash, default_qty_value=10, calc_on_every_tick = true)
+
+
+// Settings
+ma_3_high_source = input(defval=high)
+ma_3_high_length = input.int(defval=3, minval=1)
+ma_3_low_source = input(defval=low)
+ma_3_low_length = input.int(defval=3, minval=1)
+ma_6_high_source = input(defval=high)
+ma_6_high_length = input.int(defval=6, minval=1)
+ma_6_low_source = input(defval=low)
+ma_6_low_length = input.int(defval=6, minval=1)
+ma_33_close_source = input(defval=close)
+ma_33_close_length = input.int(defval=30, minval=1)
+ma_60_close_source = input(defval=close)
+ma_60_close_length = input.int(defval=60, minval=1)
+ma_120_close_source = input(defval=close)
+ma_120_close_length = input.int(defval=120, minval=1)
+ma_240_close_source = input(defval=close)
+ma_240_close_length = input.int(defval=240, minval=1)
+
+
+// Declare MAs
+ma_3_low = ta.sma(ma_3_low_source, ma_3_low_length)
+ma_3_high = ta.sma(ma_3_high_source, ma_3_high_length)
+ma_6_low = ta.sma(ma_6_low_source, ma_6_low_length)
+ma_6_high = ta.sma(ma_6_high_source, ma_6_high_length)
+ma_33_close = ta.sma(ma_33_close_source, ma_33_close_length)
+ma_60_close = ta.sma(ma_60_close_source, ma_60_close_length)
+ma_120_close = ta.sma(ma_120_close_source, ma_120_close_length)
+ma_240_close = ta.sma(ma_240_close_source, ma_240_close_length)
+
+ema_3_1_high = request.security(syminfo.tickerid, "1", ma_3_high)
+ema_3_1_low = request.security(syminfo.tickerid, "1", ma_3_low)
+ema_6_1_high = request.security(syminfo.tickerid, "1", ma_6_high)
+ema_6_1_low = request.security(syminfo.tickerid, "1", ma_6_low)
+ema_60_1 = request.security(syminfo.tickerid, "1", ma_60_close)
+ema_120_1 = request.security(syminfo.tickerid, "1", ma_120_close)
+ema_240_1 = request.security(syminfo.tickerid, "1", ma_240_close)
+
+ema_3_5_high = request.security(syminfo.tickerid, "5", ma_3_high)
+ema_3_5_low = request.security(syminfo.tickerid, "5", ma_3_low)
+ema_60_5 = request.security(syminfo.tickerid, "5", ma_60_close)
+ema_120_5 = request.security(syminfo.tickerid, "5", ma_120_close)
+ema_240_5 = request.security(syminfo.tickerid, "5", ma_240_close)
+
+//goodlong1 = ema_60_1 < ema_120_1 and ema_120_1 < ema_240_1 and ema_3_1_high < ema_60_1
+//goodlong5 = ema_60_5 < ema_120_5 and ema_120_5 < ema_240_5 and ema_3_5_high < ema_60_5
+
+goodshort1 = ema_60_1 > ema_120_1 and ema_120_1 > ema_240_1 and ema_3_1_low > ema_60_1
+goodshort5 = ema_60_1 > ema_120_1 and ema_120_1 > ema_240_1 and ema_3_5_low > ema_60_1
+
+goodshortentry = goodshort1 and goodshort5
+currentprice  = close
+shortentry = close > ema_3_1_high
+//shortentry2 = goodshortentry and (currentprice > ema_3_5_high) and (currentprice > ema_3_1_high) - dont know why ryu doesnt use this
+
+lastEntryPrice = strategy.opentrades.entry_price(strategy.opentrades - 1)
+//shorttp = math.round(lastEntryPrice-(ema_6_1_high - ema_6_1_low))
+//sell_tp_price = round(sell_position_prce-(ema_6_1_high_bybit - ema_6_1_low_bybit),decimals)
+
+// Plot
+plot(series=ma_3_low, title='ma_3_low', color=color.new(#7a7a7a, 0), linewidth=1)
+plot(series=ma_3_high, title='ma_3_high', color=color.new(#7a7a7a, 0), linewidth=1)
+plot(series=ma_6_low, title='ma_6_low', color=color.new(#eff177, 0), linewidth=1)
+plot(series=ma_6_high, title='ma_6_high', color=color.new(#eff177, 0), linewidth=1)
+plot(series=ma_33_close, title='ma_33_close', color=color.new(#3e80fa, 0), linewidth=2)
+plot(series=ma_60_close, title='ma_60_close', color=color.new(#ff0000, 0), linewidth=2)
+plot(series=ma_120_close, title='ma_120_close', color=color.new(#ff9900, 0), linewidth=2)
+plot(series=ma_240_close, title='ma_240_close', color=color.new(#009933, 0), linewidth=2)
+
+
+shortProfitPerc = input.float(title='Short Take Profit (%)', minval=0.0, step=0.1, defval=0.02) / 100
+shortExitPrice = strategy.position_avg_price * (1 - shortProfitPerc)
+
+
+
+strategy.entry('Short', strategy.short,alert_message="Short Entry" , when=(shortentry))
+//strategy.entry('Long', strategy.long,alert_message="Long Entry" , when=(test))
+//strategy.exit(id="Short TP",from_entry="Short",stop=shorttp)
+
+if (strategy.position_size < 0)
+    strategy.exit(id="Short TP", from_entry="Short",limit=shortExitPrice)
+//strategy.close('Long',alert_message="Long Close" , when=sellSignalDiv)
+//strategy.close('Short',alert_message="Short Close" , when=sommiBullish or sommiBullishDiamond)
+//  

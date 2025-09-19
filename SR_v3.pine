@@ -1,0 +1,57 @@
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © LonesomeTheBlue
+
+//@version=6
+indicator('SR', 'SR', overlay = true, max_bars_back = 501)
+tf = input.timeframe("240", "Fixed Timeframe", group = "Settings 🔨")
+prd = input.int(defval = 10, title = 'Pivot Period', minval = 4, maxval = 30, group = 'Settings 🔨', tooltip = 'Used while calculating Pivot Points, checks left&right bars')
+ppsrc = input.string(defval = 'High/Low', title = 'Source', options = ['High/Low', 'Close/Open'], group = 'Settings 🔨', tooltip = 'Source for Pivot Points')
+ChannelW = input.int(defval = 5, title = 'Maximum Channel Width %', minval = 1, maxval = 8, group = 'Settings 🔨', tooltip = 'Calculated using Highest/Lowest levels in 300 bars')
+minstrength = input.int(defval = 1, title = 'Minimum Strength', minval = 1, group = 'Settings 🔨', tooltip = 'Channel must contain at least 2 Pivot Points')
+maxnumsr = input.int(defval = 6, title = 'Maximum Number of S/R', minval = 1, maxval = 10, group = 'Settings 🔨', tooltip = 'Maximum number of Support/Resistance Channels to Show') - 1
+loopback = input.int(defval = 290, title = 'Loopback Period', minval = 100, maxval = 400, group = 'Settings 🔨', tooltip = 'While calculating S/R levels it checks Pivots in Loopback Period')
+res_col = input.color(defval = color.new(color.red, 75), title = 'Resistance Color', group = 'Colors 🟡🟢🟣')
+sup_col = input.color(defval = color.new(color.lime, 75), title = 'Support Color', group = 'Colors 🟡🟢🟣')
+inch_col = input.color(defval = color.new(color.gray, 75), title = 'Color When Price in Channel', group = 'Colors 🟡🟢🟣')
+showpp = input.bool(defval = false, title = 'Show Pivot Points', group = 'Extras ⏶⏷')
+showsrbroken = input.bool(defval = false, title = 'Show Broken Support/Resistance', group = 'Extras ⏶⏷')
+showthema1en = input.bool(defval = false, title = 'MA 1', inline = 'ma1')
+showthema1len = input.int(defval = 50, title = '', inline = 'ma1')
+showthema1type = input.string(defval = 'SMA', title = '', options = ['SMA', 'EMA'], inline = 'ma1')
+showthema2en = input.bool(defval = false, title = 'MA 2', inline = 'ma2')
+showthema2len = input.int(defval = 200, title = '', inline = 'ma2')
+showthema2type = input.string(defval = 'SMA', title = '', options = ['SMA', 'EMA'], inline = 'ma2')
+
+h_tf = request.security(syminfo.tickerid, tf, high)
+l_tf = request.security(syminfo.tickerid, tf, low)
+c_tf = request.security(syminfo.tickerid, tf, close)
+o_tf = request.security(syminfo.tickerid, tf, open)
+
+ma1 = showthema1en ? showthema1type == 'SMA' ? ta.sma(c_tf, showthema1len) : ta.ema(c_tf, showthema1len) : na
+ma2 = showthema2en ? showthema2type == 'SMA' ? ta.sma(c_tf, showthema2len) : ta.ema(c_tf, showthema2len) : na
+
+plot(ma1, color = not na(ma1) ? color.blue : na)
+plot(ma2, color = not na(ma2) ? color.red : na)
+
+// get Pivot High/low
+float src1 = ppsrc == 'High/Low' ? h_tf : math.max(c_tf, o_tf)
+float src2 = ppsrc == 'High/Low' ? l_tf : math.min(c_tf, o_tf)
+float ph = ta.pivothigh(src1, prd, prd)
+float pl = ta.pivotlow(src2, prd, prd)
+
+// draw Pivot points
+plotshape(bool(ph) and showpp, text = 'H', style = shape.labeldown, color = na, textcolor = color.new(color.red, 0), location = location.abovebar, offset = -prd)
+plotshape(bool(pl) and showpp, text = 'L', style = shape.labelup, color = na, textcolor = color.new(color.lime, 0), location = location.belowbar, offset = -prd)
+
+//calculate maximum S/R channel width
+prdhighest = ta.highest(300)
+prdlowest = ta.lowest(300)
+cwidth = (prdhighest - prdlowest) * ChannelW / 100
+
+// get/keep Pivot levels
+var pivotvals = array.new_float(0)
+var pivotlocs = array.new_float(0)
+if bool(ph) or bool(pl)
+    array.unshift(pivotvals, bool(ph) ? ph : pl)
+    array.unshift(pivotlocs, bar_index)
+    for x = array.size(pivotvals) - 1 to 0 by 1

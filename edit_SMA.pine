@@ -1,0 +1,26 @@
+//@version=4
+study(title="Multiple SMA", shorttitle="SMA", overlay=true, linktoseries=true)
+
+sma3h = input(title="SMA 3H", type=input.integer, defval=3, minval=0)
+sma_3h = sma(high, sma3h)
+plot(sma_3h, "SMA 3H", color.white)
+
+sma3l = input(title="SMA 3L", type=input.integer, defval=3, minval=0)
+sma_3l = sma(low, sma3l)
+plot(sma_3l, "SMA 3L", color.white)
+
+sma10c = input(title="SMA 10C", type=input.integer, defval=10, minval=0)
+sma_10c = sma(close, sma10c)
+plot(sma_10c, "SMA 10C", color.red)
+
+sma30c = input(title="SMA 30C", type=input.integer, defval=30, minval=0)
+sma_30c = sma(close, sma30c)
+plot(sma_30c, "SMA 30C", color.orange)
+
+sma60c = input(title="SMA 60C", type=input.integer, defval=60, minval=0)
+sma_60c = sma(close, sma60c)
+plot(sma_60c, "SMA 60C", color.yellow)
+
+sma120c = input(title="SMA 120C", type=input.integer, defval=120, minval=0)
+sma_120c = sma(close, sma120c)
+plot(sma_120c, "SMA 120C", color.green)

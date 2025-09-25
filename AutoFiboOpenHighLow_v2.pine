@@ -1,0 +1,140 @@
+//@version=5
+indicator("H1 Open", overlay=true)
+
+// ---------- Inputs ----------
+label_offset = input.int(5, "Label offset (bars to the right)", minval=1)
+show_labels  = input.bool(true, "Show labels")
+show_day_sep = input.bool(true, "Show vertical day separators")
+
+// ---------- Colors ----------
+colToday = color.new(#03470c, 0)
+colYest  = color.new(#61043d, 0)
+colP2    = color.new(#4d5a03, 0)
+colSep   = color.new(color.gray, 0)
+
+// ---------- Day detection ----------
+newDay = ta.change(time("D"))
+
+// ---------- Persistent price storage ----------
+var float todayHigh = na
+var float todayLow  = na
+var float yestHigh  = na
+var float yestLow   = na
+var float p2High    = na
+var float p2Low     = na
+
+// ---------- Day-start bar_index storage ----------
+var int todayStart = na
+var int yestStart  = na
+var int p2Start    = na
+
+// ---------- Persistent line objects ----------
+var line tHighLine = na
+var line tLowLine  = na
+var line yHighLine = na
+var line yLowLine  = na
+var line p2HighLine = na
+var line p2LowLine  = na
+
+// ---------- Persistent label objects ----------
+var label tHighLbl = na
+var label tLowLbl  = na
+var label yHighLbl = na
+var label yLowLbl  = na
+var label p2HighLbl = na
+var label p2LowLbl  = na
+
+// Initialize on first bar
+if na(todayHigh)
+    todayHigh := open
+    todayLow  := open
+    todayStart := bar_index
+
+// On new day: shift history and store day-start indices
+if newDay
+    p2High := yestHigh
+    p2Low  := yestLow
+    p2Start := yestStart
+
+    yestHigh := todayHigh
+    yestLow  := todayLow
+    yestStart := todayStart
+
+    todayHigh := open
+    todayLow  := open
+    todayStart := bar_index
+
+    if show_day_sep
+        // full-height vertical separator (single-line call)
+        line.new(bar_index, 1e10, bar_index, -1e10, xloc=xloc.bar_index, extend=extend.none, color=colSep, style=line.style_dotted, width=1)
+else
+    todayHigh := math.max(todayHigh, open)
+    todayLow  := math.min(todayLow, open)
+
+// ---------- Helper: create/update horizontal line that STARTS at dayStart ----------
+f_updateLineAtStart(_existingLine, _startIdx, _y, _col, _width) =>
+    if na(_y) or na(_startIdx)
+        _existingLine
+    else
+        if na(_existingLine)
+            // create with left end at dayStart and extend to the right
+            line.new(_startIdx, _y, _startIdx + 1, _y, xloc=xloc.bar_index, extend=extend.right, color=_col, width=_width)
+        else
+            // keep left end anchored at dayStart, update Y
+            line.set_xy1(_existingLine, _startIdx, _y)
+            line.set_xy2(_existingLine, _startIdx + 1, _y)
+            _existingLine
+
+// Update fibo (0 & 1) horizontal lines for the 3 days (left anchored at day start)
+tHighLine := f_updateLineAtStart(tHighLine, todayStart, todayHigh, colToday, 1)
+tLowLine  := f_updateLineAtStart(tLowLine,  todayStart, todayLow,  colToday, 1)
+yHighLine := f_updateLineAtStart(yHighLine, yestStart,  yestHigh,  colYest, 1)
+yLowLine  := f_updateLineAtStart(yLowLine,  yestStart,  yestLow,   colYest, 1)
+p2HighLine := f_updateLineAtStart(p2HighLine, p2Start, p2High, colP2, 1)
+p2LowLine  := f_updateLineAtStart(p2LowLine,  p2Start, p2Low,  colP2, 1)
+
+// ---------- Labels: create once, then update each last-bar tick ----------
+if show_labels and barstate.islast
+    x = bar_index + label_offset
+
+    // Today H/L
+    if not na(todayHigh)
+        if na(tHighLbl)
+            tHighLbl := label.new(x, todayHigh, "H0 = " + str.tostring(todayHigh, format.mintick), xloc=xloc.bar_index, yloc=yloc.price, style=label.style_label_left, color=colToday, textcolor=color.white)
+        else
+            label.set_xy(tHighLbl, x, todayHigh)
+            label.set_text(tHighLbl, "H0 = " + str.tostring(todayHigh, format.mintick))
+    if not na(todayLow)
+        if na(tLowLbl)
+            tLowLbl := label.new(x, todayLow, "L0 = " + str.tostring(todayLow, format.mintick), xloc=xloc.bar_index, yloc=yloc.price, style=label.style_label_left, color=colToday, textcolor=color.white)
+        else
+            label.set_xy(tLowLbl, x, todayLow)
+            label.set_text(tLowLbl, "L0 = " + str.tostring(todayLow, format.mintick))
+
+    // Yesterday H/L
+    if not na(yestHigh)
+        if na(yHighLbl)
+            yHighLbl := label.new(x, yestHigh, "H1 = " + str.tostring(yestHigh, format.mintick), xloc=xloc.bar_index, yloc=yloc.price, style=label.style_label_left, color=colYest, textcolor=color.white)
+        else
+            label.set_xy(yHighLbl, x, yestHigh)
+            label.set_text(yHighLbl, "H1 = " + str.tostring(yestHigh, format.mintick))
+    if not na(yestLow)
+        if na(yLowLbl)
+            yLowLbl := label.new(x, yestLow, "L1 = " + str.tostring(yestLow, format.mintick), xloc=xloc.bar_index, yloc=yloc.price, style=label.style_label_left, color=colYest, textcolor=color.white)
+        else
+            label.set_xy(yLowLbl, x, yestLow)
+            label.set_text(yLowLbl, "L1 = " + str.tostring(yestLow, format.mintick))
+
+    // 2 days ago H/L
+    if not na(p2High)
+        if na(p2HighLbl)
+            p2HighLbl := label.new(x, p2High, "H2 = " + str.tostring(p2High, format.mintick), xloc=xloc.bar_index, yloc=yloc.price, style=label.style_label_left, color=colP2, textcolor=color.white)
+        else
+            label.set_xy(p2HighLbl, x, p2High)
+            label.set_text(p2HighLbl, "H2 = " + str.tostring(p2High, format.mintick))
+    if not na(p2Low)
+        if na(p2LowLbl)
+            p2LowLbl := label.new(x, p2Low, "L2 = " + str.tostring(p2Low, format.mintick), xloc=xloc.bar_index, yloc=yloc.price, style=label.style_label_left, color=colP2, textcolor=color.white)
+        else
+            label.set_xy(p2LowLbl, x, p2Low)
+            label.set_text(p2LowLbl, "L2 = " + str.tostring(p2Low, format.mintick))
